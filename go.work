@@ -1,7 +1,10 @@
-go 1.18
+go 1.21
+
+toolchain go1.21.1
 
 use (
 	./learn-api/hello-world-api
 	./proglog
-	./trending-repo-crawler
+	./trend-crawler
+	./trend-discordbot
 )
