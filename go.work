@@ -3,4 +3,5 @@ go 1.18
 use (
 	./learn-api/hello-world-api
 	./proglog
+	./trending-repo-crawler
 )

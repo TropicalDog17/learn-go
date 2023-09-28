@@ -84,6 +84,7 @@ func updatePerson(w http.ResponseWriter, r *http.Request) {
 		resp.Success = false
 		resp.Message = "Invalid index :("
 		resp.Data = nil
+		json.NewEncoder(w).Encode(resp)
 		return
 	}
 	reqBody, _ := ioutil.ReadAll(r.Body)
@@ -96,13 +97,38 @@ func updatePerson(w http.ResponseWriter, r *http.Request) {
 	resp.Data = updatedPerson
 	json.NewEncoder(w).Encode(resp)
 }
+func RemoveIndex[T any](s []T, index int) []T {
+	ret := make([]T, 0)
+	ret = append(ret, s[:index]...)
+	return append(ret, s[index+1:]...)
+}
+func deletePerson(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Endpoint DeletePerson")
+	vars := mux.Vars(r)
+	id, _ := strconv.Atoi(vars["id"])
+	resp := &Response{}
+	if !isValidIndex(id) {
+		resp.Success = false
+		resp.Message = "Invalid index :("
+		resp.Data = nil
+		json.NewEncoder(w).Encode(resp)
+
+		return
+	}
+	deletedPerson := people[id]
+	resp.Data = deletedPerson
+	resp.Message = fmt.Sprintf("Successfully removed the person at id %v. Keep in mind that all other person id is changed :)", id)
+	resp.Success = true
+	people = RemoveIndex[Person](people, id)
+	json.NewEncoder(w).Encode(resp)
+}
 func handleRequests() {
 	myRouter := mux.NewRouter().StrictSlash(true)
 	myRouter.HandleFunc("/", home)
 	myRouter.HandleFunc("/all", getAll)
 	myRouter.HandleFunc("/person/{id}", getByIndex).Methods("GET")
 	myRouter.HandleFunc("/person/{id}", updatePerson).Methods("PUT")
-
+	myRouter.HandleFunc("/person/{id}", deletePerson).Methods("DELETE")
 	myRouter.HandleFunc("/person", addPerson).Methods("POST")
 	log.Fatal(http.ListenAndServe(":3000", myRouter))
 }
@@ -110,7 +136,7 @@ func isValidIndex(id int) bool {
 	if id < 0 {
 		return false
 	}
-	if id > len(people) {
+	if id >= len(people) {
 		return false
 	}
 	return true
